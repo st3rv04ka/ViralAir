@@ -46,9 +46,9 @@ jobs:
       #if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          main-linux-amd64
-          main-windows-amd64
-          main-darwin-amd64
+          /home/runner/work/ViralAir/ViralAir/main-linux-amd64
+          /home/runner/work/ViralAir/ViralAir/main-windows-amd64
+          /home/runner/work/ViralAir/ViralAir/main-darwin-amd64
         tag_name: ${{ github.ref_name }}
         release_name: Release ${{ github.ref_name }}
         draft: false
