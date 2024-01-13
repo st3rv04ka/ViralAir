@@ -5,11 +5,14 @@ Mode-S signal encoder
 
 ## Overview
 
-This project is designed to transmit Mode-S messages, currently supporting only Automatic Dependent Surveillance-Broadcast (ADS-B). It's implemented in Go and provides a robust framework for handling ADS-B messages for aviation and tracking applications.
+This project is designed to transmit Mode-S messages, currently supporting only Automatic Dependent Surveillance-Broadcast (ADS-B).
+
+## Supported formats
+
+- ADSB (DF 17)
 
 ## Features
 
-- Support for ADS-B message transmission.
 - High-performance Go implementation.
 - Easy to integrate with existing systems.
 
