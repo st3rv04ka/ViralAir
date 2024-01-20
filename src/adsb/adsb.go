@@ -30,6 +30,11 @@ import (
 	"strings"
 )
 
+const (
+	// ADSB Data Format (17)
+	format = 17
+)
+
 // Encode altitude
 func encodeAltModes(alt float64, surface int) int {
 	mbit := 0
@@ -49,7 +54,69 @@ func encodeAltModes(alt float64, surface int) int {
 	return (encalt & 0x0F) | tmp1 | tmp2 | (mbit << 6) | (qbit << 4)
 }
 
-// Encode aricraft position with CPR
+// Encode aircraft idenrification message
+func GetIdentificationMessage(
+	icao int,
+	tc int,
+	ca int,
+	sign string,
+) (signEncoded []byte) {
+
+	if len(sign) > 8 {
+		log.Println("[-] Sign must be less than 8 chars")
+		return
+	}
+
+	if len(sign) < 8 {
+		sign += strings.Repeat(" ", 8-len(sign))
+	}
+
+	aicCharset := "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?"
+
+	// Format + CA + ICAO
+	signEncoded = append(signEncoded, byte((format<<3)|ca))
+	signEncoded = append(signEncoded, byte((icao>>16)&0xff))
+	signEncoded = append(signEncoded, byte((icao>>8)&0xff))
+	signEncoded = append(signEncoded, byte((icao)&0xff))
+
+	// TC + CAT
+	cat := 0b000
+	signEncoded = append(signEncoded, byte((tc<<3)|(cat)))
+
+	// SIGN
+	symbols := make([]int, 0, 8)
+	for i := 0; i < 8; i++ {
+		charPosition := strings.IndexByte(aicCharset, sign[i])
+		log.Printf("[+] Encoded char %d -> %02x", sign[i], charPosition)
+		symbols = append(symbols, charPosition)
+	}
+	signEncoded = append(signEncoded, byte((symbols[0]<<2)|(symbols[1]>>4)))
+	signEncoded = append(signEncoded, byte((symbols[1]<<4)|(symbols[2]>>2)))
+	signEncoded = append(signEncoded, byte((symbols[2]<<6)|symbols[3]))
+	signEncoded = append(signEncoded, byte((symbols[4]<<2)|(symbols[5]>>4)))
+	signEncoded = append(signEncoded, byte((symbols[5]<<4)|(symbols[6]>>2)))
+	signEncoded = append(signEncoded, byte((symbols[6]<<6)|symbols[7]))
+
+	// Convert to hex
+	var sbOdd strings.Builder
+	for _, b := range signEncoded {
+		sbOdd.WriteString(fmt.Sprintf("%02x", b))
+	}
+	signString := sbOdd.String()
+	log.Printf("[+] Sign frame without CRC [%s]", signString)
+
+	signCRC := misc.Bin2int(crc.Crc(signString+"000000", true))
+	log.Printf("[+] Sign frame CRC [%02x]", signCRC)
+
+	signEncoded = append(signEncoded, byte((signCRC>>16)&0xff))
+	signEncoded = append(signEncoded, byte((signCRC>>8)&0xff))
+	signEncoded = append(signEncoded, byte((signCRC)&0xff))
+	log.Printf("[+] Sign frame data [%02x]", signEncoded)
+
+	return
+}
+
+// Encode aircraft position with CPR
 func GetEncodedPosition(
 	ca int,
 	icao int,
@@ -62,9 +129,6 @@ func GetEncodedPosition(
 	lon float64,
 	surface int,
 ) (even []byte, odd []byte) {
-
-	// ADSB Data Format (17)
-	format := 17
 
 	// Altitude
 	log.Printf("[+] Encode alltitude [%f] with the surface flag [%d]", alt, surface)

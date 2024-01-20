@@ -4,7 +4,7 @@ import (
 	"adsb/v2/src/misc"
 )
 
-func Frame1090esPpmModulate(even, odd []byte) []byte {
+func Frame1090esPpmModulateCPR(even, odd []byte) []byte {
 	var ppm []byte
 
 	for i := 0; i < 48; i++ {
@@ -32,6 +32,28 @@ func Frame1090esPpmModulate(even, odd []byte) []byte {
 	}
 
 	for i := 0; i < 48; i++ {
+		ppm = append(ppm, 0)
+	}
+
+	return ppm
+}
+
+func Frame1090esPpmModulate(frame []byte) []byte {
+	var ppm []byte
+
+	for i := 0; i < 48; i++ {
+		ppm = append(ppm, 0)
+	}
+
+	ppm = append(ppm, 0xA1, 0x40)
+
+	for _, byteVal := range frame {
+		word16 := misc.Packbits(manchesterEncode(^byteVal))
+		ppm = append(ppm, word16[0])
+		ppm = append(ppm, word16[1])
+	}
+
+	for i := 0; i < 100; i++ {
 		ppm = append(ppm, 0)
 	}
 
