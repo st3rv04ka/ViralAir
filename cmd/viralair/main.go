@@ -34,14 +34,22 @@ func main() {
 			aiacFlags := flag.NewFlagSet("aiac", flag.ExitOnError)
 			var (
 				icao = aiacFlags.Int("icao", 0xDEADBE, "icao for ads-s signal")
-				tc   = aiacFlags.Int("tc", 1, "type code")
+				tc   = aiacFlags.Int("tc", 4, "type code")
 				/**
 				1 - Category Set D
 				2 - Category Set C
 				3 - Category Set B
 				4 - Category Set A
 				**/
-				ca   = aiacFlags.Int("ca", 5, "transponder capability class")
+				ca  = aiacFlags.Int("ca", 5, "transponder capability class")
+				cat = aiacFlags.Int("cat", 5, "aircraft category")
+				/**
+				0 - No Information Provided
+				1 - Light (less than 7000 kg)
+				2 - Medium 1 (between 7000 kg and 34000 kg)
+				3 - Medium 2 (between 34000 kg to 136000 kg)
+				5 - Heavy (larger than 136000 kg)
+				**/
 				sign = aiacFlags.String("sign", "XXX777", "aircraft identification 8 chars (@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?)")
 			)
 			aiacFlags.Parse(os.Args[3:])
@@ -51,6 +59,7 @@ func main() {
 				*tc,
 				*ca,
 				*sign,
+				*cat,
 			)
 			frame := modulator.Frame1090esPpmModulate(signEncoded)
 			sdrOutput := modulator.GenerateSDROutput(frame)

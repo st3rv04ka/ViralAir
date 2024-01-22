@@ -1,26 +1,5 @@
 package adsb
 
-/**
-
-Based on https://github.com/lyusupov/ADSB-Out
-
-# Copyright (C) 2017-2021 Linar Yusupov
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-**/
-
 import (
 	"adsb/v2/src/cpr"
 	"adsb/v2/src/crc"
@@ -60,6 +39,7 @@ func GetIdentificationMessage(
 	tc int,
 	ca int,
 	sign string,
+	cat int,
 ) (signEncoded []byte) {
 
 	if len(sign) > 8 {
@@ -80,7 +60,6 @@ func GetIdentificationMessage(
 	signEncoded = append(signEncoded, byte((icao)&0xff))
 
 	// TC + CAT
-	cat := 0b000
 	signEncoded = append(signEncoded, byte((tc<<3)|(cat)))
 
 	// SIGN
@@ -115,6 +94,12 @@ func GetIdentificationMessage(
 
 	return
 }
+
+/**
+
+Based on https://github.com/lyusupov/ADSB-Out
+
+**/
 
 // Encode aircraft position with CPR
 func GetEncodedPosition(
