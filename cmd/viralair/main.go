@@ -28,27 +28,37 @@ func main() {
 			fmt.Println("- Aircraft Identification and Category [aiac]")
 			os.Exit(1)
 		}
-		adsbType := os.Args[2]
-		switch adsbType {
+		adsbMessageType := os.Args[2]
+		switch adsbMessageType {
 		case "aiac":
 			aiacFlags := flag.NewFlagSet("aiac", flag.ExitOnError)
 			var (
 				icao = aiacFlags.Int("icao", 0xDEADBE, "icao for ads-s signal")
 				tc   = aiacFlags.Int("tc", 4, "type code")
+				ca   = aiacFlags.Int("ca", 5, "transponder capability class")
+				cat  = aiacFlags.Int("cat", 5, "aircraft category")
 				/**
-				1 - Category Set D
-				2 - Category Set C
-				3 - Category Set B
-				4 - Category Set A
-				**/
-				ca  = aiacFlags.Int("ca", 5, "transponder capability class")
-				cat = aiacFlags.Int("cat", 5, "aircraft category")
-				/**
-				0 - No Information Provided
-				1 - Light (less than 7000 kg)
-				2 - Medium 1 (between 7000 kg and 34000 kg)
-				3 - Medium 2 (between 34000 kg to 136000 kg)
-				5 - Heavy (larger than 136000 kg)
+				TC CA
+				--------------------------
+				1 	ANY 	Reserved
+				ANY 0 	No category information
+				2 	1 	Surface emergency vehicle
+				2 	3 	Surface service vehicle
+				2 	4–7 	Ground obstruction
+				3 	1 	Glider, sailplane
+				3 	2 	Lighter-than-air
+				3 	3 	Parachutist, skydiver
+				3 	4 	Ultralight, hang-glider, paraglider
+				3 	5 	Reserved
+				3 	6 	Unmanned aerial vehicle
+				3 	7 	Space or transatmospheric vehicle
+				4 	1 	Light (less than 7000 kg)
+				4 	2 	Medium 1 (between 7000 kg and 34000 kg)
+				4 	3 	Medium 2 (between 34000 kg to 136000 kg)
+				4 	4 	High vortex aircraft
+				4 	5 	Heavy (larger than 136000 kg)
+				4 	6 	High performance (>5 g acceleration) and high speed (>400 kt)
+				4 	7 	Rotorcraft
 				**/
 				sign = aiacFlags.String("sign", "XXX777", "aircraft identification 8 chars (@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?)")
 			)
@@ -61,7 +71,7 @@ func main() {
 				*sign,
 				*cat,
 			)
-			frame := modulator.Frame1090esPpmModulate(signEncoded)
+			frame := modulator.PulsePositionMululation(signEncoded)
 			sdrOutput := modulator.GenerateSDROutput(frame)
 			misc.SaveToFile("Samples.iq8s", sdrOutput)
 			return

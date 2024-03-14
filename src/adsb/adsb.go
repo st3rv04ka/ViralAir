@@ -15,7 +15,7 @@ const (
 )
 
 // Encode altitude
-func encodeAltModes(alt float64, surface int) int {
+func encodeAltitudeModes(alt float64, surface int) int {
 	mbit := 0
 	qbit := 1
 	encalt := int((int(alt) + 1000) / 25)
@@ -40,7 +40,7 @@ func GetIdentificationMessage(
 	ca int,
 	sign string,
 	cat int,
-) (signEncoded []byte) {
+) (signEncodedArray []byte) {
 
 	if len(sign) > 8 {
 		log.Println("[-] Sign must be less than 8 chars")
@@ -54,13 +54,13 @@ func GetIdentificationMessage(
 	aicCharset := "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?"
 
 	// Format + CA + ICAO
-	signEncoded = append(signEncoded, byte((format<<3)|ca))
-	signEncoded = append(signEncoded, byte((icao>>16)&0xff))
-	signEncoded = append(signEncoded, byte((icao>>8)&0xff))
-	signEncoded = append(signEncoded, byte((icao)&0xff))
+	signEncodedArray = append(signEncodedArray, byte((format<<3)|ca))
+	signEncodedArray = append(signEncodedArray, byte((icao>>16)&0xff))
+	signEncodedArray = append(signEncodedArray, byte((icao>>8)&0xff))
+	signEncodedArray = append(signEncodedArray, byte((icao)&0xff))
 
 	// TC + CAT
-	signEncoded = append(signEncoded, byte((tc<<3)|(cat)))
+	signEncodedArray = append(signEncodedArray, byte((tc<<3)|(cat)))
 
 	// SIGN
 	symbols := make([]int, 0, 8)
@@ -69,28 +69,28 @@ func GetIdentificationMessage(
 		log.Printf("[+] Encoded char %d -> %02x", sign[i], charPosition)
 		symbols = append(symbols, charPosition)
 	}
-	signEncoded = append(signEncoded, byte((symbols[0]<<2)|(symbols[1]>>4)))
-	signEncoded = append(signEncoded, byte((symbols[1]<<4)|(symbols[2]>>2)))
-	signEncoded = append(signEncoded, byte((symbols[2]<<6)|symbols[3]))
-	signEncoded = append(signEncoded, byte((symbols[4]<<2)|(symbols[5]>>4)))
-	signEncoded = append(signEncoded, byte((symbols[5]<<4)|(symbols[6]>>2)))
-	signEncoded = append(signEncoded, byte((symbols[6]<<6)|symbols[7]))
+	signEncodedArray = append(signEncodedArray, byte((symbols[0]<<2)|(symbols[1]>>4)))
+	signEncodedArray = append(signEncodedArray, byte((symbols[1]<<4)|(symbols[2]>>2)))
+	signEncodedArray = append(signEncodedArray, byte((symbols[2]<<6)|symbols[3]))
+	signEncodedArray = append(signEncodedArray, byte((symbols[4]<<2)|(symbols[5]>>4)))
+	signEncodedArray = append(signEncodedArray, byte((symbols[5]<<4)|(symbols[6]>>2)))
+	signEncodedArray = append(signEncodedArray, byte((symbols[6]<<6)|symbols[7]))
 
 	// Convert to hex
 	var sbOdd strings.Builder
-	for _, b := range signEncoded {
+	for _, b := range signEncodedArray {
 		sbOdd.WriteString(fmt.Sprintf("%02x", b))
 	}
 	signString := sbOdd.String()
 	log.Printf("[+] Sign frame without CRC [%s]", signString)
 
-	signCRC := misc.Bin2int(crc.Crc(signString+"000000", true))
+	signCRC := misc.Binary2Integer(crc.Crc(signString+"000000", true))
 	log.Printf("[+] Sign frame CRC [%02x]", signCRC)
 
-	signEncoded = append(signEncoded, byte((signCRC>>16)&0xff))
-	signEncoded = append(signEncoded, byte((signCRC>>8)&0xff))
-	signEncoded = append(signEncoded, byte((signCRC)&0xff))
-	log.Printf("[+] Sign frame data [%02x]", signEncoded)
+	signEncodedArray = append(signEncodedArray, byte((signCRC>>16)&0xff))
+	signEncodedArray = append(signEncodedArray, byte((signCRC>>8)&0xff))
+	signEncodedArray = append(signEncodedArray, byte((signCRC)&0xff))
+	log.Printf("[+] Sign frame data [%02x]", signEncodedArray)
 
 	return
 }
@@ -113,92 +113,92 @@ func GetEncodedPosition(
 	lat float64,
 	lon float64,
 	surface int,
-) (even []byte, odd []byte) {
+) ([]byte, []byte) {
 
 	// Altitude
 	log.Printf("[+] Encode alltitude [%f] with the surface flag [%d]", alt, surface)
-	encAlt := encodeAltModes(alt, surface)
+	encAlt := encodeAltitudeModes(alt, surface)
 	log.Printf("[+] Encoded altirude [0x%02x]", encAlt)
 
 	// Posistion
 	// Even
 	log.Printf("[+] Encode even frame with lat [%f] and lon [%f]", lat, lon)
-	evenLat, evenLon := cpr.CprEncode(lat, lon, 0, surface)
+	evenLat, evenLon := cpr.CPREncode(lat, lon, 0, surface)
 	log.Printf("[+] Encoded even frame lat [0x%02x] and lon [0x%02x]", evenLat, evenLon)
 	// Odd
 	log.Printf("[+] Encode odd frame with lat [%f] and lon [%f]", lat, lon)
-	oddLat, oddLon := cpr.CprEncode(lat, lon, 1, surface)
+	oddLat, oddLon := cpr.CPREncode(lat, lon, 1, surface)
 	log.Printf("[+] Encoded odd frame lat [0x%02x] and lon [0x%02x]", oddLat, oddLon)
 
 	// Encode even data
 	ff := 0
-	var dataEven []byte
+	var dataEvenArray []byte
 	// Format + CA + ICAO
-	dataEven = append(dataEven, byte((format<<3)|ca))
-	dataEven = append(dataEven, byte((icao>>16)&0xff))
-	dataEven = append(dataEven, byte((icao>>8)&0xff))
-	dataEven = append(dataEven, byte((icao)&0xff))
+	dataEvenArray = append(dataEvenArray, byte((format<<3)|ca))
+	dataEvenArray = append(dataEvenArray, byte((icao>>16)&0xff))
+	dataEvenArray = append(dataEvenArray, byte((icao>>8)&0xff))
+	dataEvenArray = append(dataEvenArray, byte((icao)&0xff))
 
 	// Lat + Lot + Alt (even)
-	dataEven = append(dataEven, byte((tc<<3)|(ss<<1)|nicsb))
-	dataEven = append(dataEven, byte((encAlt>>4)&0xff))
-	dataEven = append(dataEven, byte((encAlt&0xf)<<4|(time<<3)|(ff<<2)|(evenLat>>15)))
-	dataEven = append(dataEven, byte((evenLat>>7)&0xff))
-	dataEven = append(dataEven, byte(((evenLat&0x7f)<<1)|(evenLon>>16)))
-	dataEven = append(dataEven, byte((evenLon>>8)&0xff))
-	dataEven = append(dataEven, byte((evenLon)&0xff))
+	dataEvenArray = append(dataEvenArray, byte((tc<<3)|(ss<<1)|nicsb))
+	dataEvenArray = append(dataEvenArray, byte((encAlt>>4)&0xff))
+	dataEvenArray = append(dataEvenArray, byte((encAlt&0xf)<<4|(time<<3)|(ff<<2)|(evenLat>>15)))
+	dataEvenArray = append(dataEvenArray, byte((evenLat>>7)&0xff))
+	dataEvenArray = append(dataEvenArray, byte(((evenLat&0x7f)<<1)|(evenLon>>16)))
+	dataEvenArray = append(dataEvenArray, byte((evenLon>>8)&0xff))
+	dataEvenArray = append(dataEvenArray, byte((evenLon)&0xff))
 
 	// Convert to hex
 	var sbEven strings.Builder
-	for _, b := range dataEven[:11] {
+	for _, b := range dataEvenArray[:11] {
 		sbEven.WriteString(fmt.Sprintf("%02x", b))
 	}
 	dataEvenString := sbEven.String()
 	log.Printf("[+] Even frame without CRC [%s]", dataEvenString)
 
 	// Calculate CRC
-	dataEvenCRC := misc.Bin2int(crc.Crc(dataEvenString+"000000", true))
+	dataEvenCRC := misc.Binary2Integer(crc.Crc(dataEvenString+"000000", true))
 	log.Printf("[+] Even data CRC [%02x]", dataEvenCRC)
 
 	// Append CRC
-	dataEven = append(dataEven, byte((dataEvenCRC>>16)&0xff))
-	dataEven = append(dataEven, byte((dataEvenCRC>>8)&0xff))
-	dataEven = append(dataEven, byte((dataEvenCRC)&0xff))
-	log.Printf("[+] Even data [%02x]", dataEven)
+	dataEvenArray = append(dataEvenArray, byte((dataEvenCRC>>16)&0xff))
+	dataEvenArray = append(dataEvenArray, byte((dataEvenCRC>>8)&0xff))
+	dataEvenArray = append(dataEvenArray, byte((dataEvenCRC)&0xff))
+	log.Printf("[+] Even data [%02x]", dataEvenArray)
 
 	// Encode odd data
 	ff = 1
-	var dataOdd []byte
+	var dataOddArray []byte
 	// Format + CA + ICAO
-	dataOdd = append(dataOdd, byte((format<<3)|ca))
-	dataOdd = append(dataOdd, byte((icao>>16)&0xff))
-	dataOdd = append(dataOdd, byte((icao>>8)&0xff))
-	dataOdd = append(dataOdd, byte((icao)&0xff))
+	dataOddArray = append(dataOddArray, byte((format<<3)|ca))
+	dataOddArray = append(dataOddArray, byte((icao>>16)&0xff))
+	dataOddArray = append(dataOddArray, byte((icao>>8)&0xff))
+	dataOddArray = append(dataOddArray, byte((icao)&0xff))
 
 	// Lat + Lot + Alt (even)
-	dataOdd = append(dataOdd, byte((tc<<3)|(ss<<1)|nicsb))
-	dataOdd = append(dataOdd, byte((encAlt>>4)&0xff))
-	dataOdd = append(dataOdd, byte((encAlt&0xf)<<4|(time<<3)|(ff<<2)|(oddLat>>15)))
-	dataOdd = append(dataOdd, byte((oddLat>>7)&0xff))
-	dataOdd = append(dataOdd, byte(((oddLat&0x7f)<<1)|(oddLon>>16)))
-	dataOdd = append(dataOdd, byte((oddLon>>8)&0xff))
-	dataOdd = append(dataOdd, byte((oddLon)&0xff))
+	dataOddArray = append(dataOddArray, byte((tc<<3)|(ss<<1)|nicsb))
+	dataOddArray = append(dataOddArray, byte((encAlt>>4)&0xff))
+	dataOddArray = append(dataOddArray, byte((encAlt&0xf)<<4|(time<<3)|(ff<<2)|(oddLat>>15)))
+	dataOddArray = append(dataOddArray, byte((oddLat>>7)&0xff))
+	dataOddArray = append(dataOddArray, byte(((oddLat&0x7f)<<1)|(oddLon>>16)))
+	dataOddArray = append(dataOddArray, byte((oddLon>>8)&0xff))
+	dataOddArray = append(dataOddArray, byte((oddLon)&0xff))
 
 	// Convert to hex
 	var sbOdd strings.Builder
-	for _, b := range dataOdd[:11] {
+	for _, b := range dataOddArray[:11] {
 		sbOdd.WriteString(fmt.Sprintf("%02x", b))
 	}
 	dataOddString := sbOdd.String()
 	log.Printf("[+] Odd frame without CRC [%s]", dataOddString)
 
-	dataOddCRC := misc.Bin2int(crc.Crc(dataOddString+"000000", true))
+	dataOddCRC := misc.Binary2Integer(crc.Crc(dataOddString+"000000", true))
 	log.Printf("[+] Odd data CRC [%02x]", dataOddCRC)
 
-	dataOdd = append(dataOdd, byte((dataOddCRC>>16)&0xff))
-	dataOdd = append(dataOdd, byte((dataOddCRC>>8)&0xff))
-	dataOdd = append(dataOdd, byte((dataOddCRC)&0xff))
-	log.Printf("[+] Odd data [%02x]", dataOdd)
+	dataOddArray = append(dataOddArray, byte((dataOddCRC>>16)&0xff))
+	dataOddArray = append(dataOddArray, byte((dataOddCRC>>8)&0xff))
+	dataOddArray = append(dataOddArray, byte((dataOddCRC)&0xff))
+	log.Printf("[+] Odd data [%02x]", dataOddArray)
 
-	return dataEven, dataOdd
+	return dataEvenArray, dataOddArray
 }

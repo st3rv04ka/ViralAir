@@ -8,8 +8,8 @@ const (
 	GENERATOR = "1111111111111010000001001"
 )
 
-func Crc(msg string, encode bool) string {
-	msgbin := []rune(misc.Hex2bin(msg))
+func Crc(message string, encode bool) string {
+	binaryMessageArray := []rune(misc.Hexadecimal2Binary(message))
 	generator := []int{}
 
 	for _, char := range GENERATOR {
@@ -17,19 +17,19 @@ func Crc(msg string, encode bool) string {
 	}
 
 	if encode {
-		for i := len(msgbin) - 24; i < len(msgbin); i++ {
-			msgbin[i] = '0'
+		for i := len(binaryMessageArray) - 24; i < len(binaryMessageArray); i++ {
+			binaryMessageArray[i] = '0'
 		}
 	}
 
-	for i := 0; i < len(msgbin)-24; i++ {
-		if msgbin[i] == '1' {
+	for i := 0; i < len(binaryMessageArray)-24; i++ {
+		if binaryMessageArray[i] == '1' {
 			for j := range generator {
-				msgbin[i+j] = rune('0' + (int(msgbin[i+j]-'0') ^ generator[j]))
+				binaryMessageArray[i+j] = rune('0' + (int(binaryMessageArray[i+j]-'0') ^ generator[j]))
 			}
 		}
 	}
 
-	reminder := string(msgbin[len(msgbin)-24:])
+	reminder := string(binaryMessageArray[len(binaryMessageArray)-24:])
 	return reminder
 }

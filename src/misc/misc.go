@@ -8,33 +8,33 @@ import (
 	"strings"
 )
 
-func Bin2int(binStr string) int64 {
-	n := new(big.Int)
-	n, ok := n.SetString(binStr, 2)
+func Binary2Integer(binary string) int64 {
+	integer := new(big.Int)
+	integer, ok := integer.SetString(binary, 2)
 	if !ok {
 		return 0
 	}
-	return n.Int64()
+	return integer.Int64()
 }
 
-func ExtractBit(byte byte, position int) bool {
-	return (byte>>position)&1 == 1
+func ExtractBit(byte byte, bitPosition int) bool {
+	return (byte>>bitPosition)&1 == 1
 }
 
 // Numpy pack
-func Packbits(bits []int) []byte {
-	numBytes := int(math.Ceil(float64(len(bits)) / 8.0))
-	packedBytes := make([]byte, numBytes)
+func PackBits(bits []int) []byte {
+	bytesCount := int(math.Ceil(float64(len(bits)) / 8.0))
+	packedBytesArray := make([]byte, bytesCount)
 
-	for i, bit := range bits {
+	for position, bit := range bits {
 		if bit != 0 {
-			byteIndex := i / 8
-			bitPosition := uint(7 - i%8)
-			packedBytes[byteIndex] |= 1 << bitPosition
+			byteIndex := position / 8
+			bitPosition := uint(7 - position%8)
+			packedBytesArray[byteIndex] |= 1 << bitPosition
 		}
 	}
 
-	return packedBytes
+	return packedBytesArray
 }
 
 func SaveToFile(filename string, data []byte) error {
@@ -53,29 +53,29 @@ func SaveToFile(filename string, data []byte) error {
 }
 
 // Numpy unpack
-func Unpackbits(bytes []byte) []int {
-	var bits []int
+func UnpackBits(bytes []byte) []int {
+	var bitsArray []int
 	for _, b := range bytes {
 		for i := 7; i >= 0; i-- {
-			bits = append(bits, int((b>>uint(i))&1))
+			bitsArray = append(bitsArray, int((b>>uint(i))&1))
 		}
 	}
-	return bits
+	return bitsArray
 }
 
-func Hex2bin(hexStr string) string {
-	n := new(big.Int)
-	n, ok := n.SetString(hexStr, 16)
+func Hexadecimal2Binary(hex string) string {
+	binary := new(big.Int)
+	binary, ok := binary.SetString(hex, 16)
 	if !ok {
 		return ""
 	}
 
-	binStr := fmt.Sprintf("%b", n)
+	binaryString := fmt.Sprintf("%b", binary)
 
-	numBits := len(hexStr) * 4
-	if len(binStr) < numBits {
-		binStr = strings.Repeat("0", numBits-len(binStr)) + binStr
+	bitsCount := len(hex) * 4
+	if len(binaryString) < bitsCount {
+		binaryString = strings.Repeat("0", bitsCount-len(binaryString)) + binaryString
 	}
 
-	return binStr
+	return binaryString
 }
